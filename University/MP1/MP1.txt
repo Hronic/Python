@@ -1,0 +1,11 @@
+Celem mini-projektów jest praktyczne sprawdzenie zrozumienia sposobów implementacji poszczególnych konstrukcji z modelu pojęciowego (klasy, asocjacje, ekstensja, itp.) oraz współpracy z modelem relacyjnym. Dodatkowo można je potraktować jako „fundament” projektu końcowego (który później zostanie uzupełniony o odpowiednie elementy, m. in. GUI). Należy zaimplementować różne biznesowe konstrukcje (odpadają wszelkie techniczne informacje jak np. liczba obiektów w ekstensji, settery/gettery, wyświetlanie obiektów, itp.) występujące w modelu pojęciowym. Nie wolno łączyć przykładów, tzn. każda konstrukcja musi mieć swój własny przykład biznesowy. Zakres ocenianych zagadnień jest przedstawiony w poniższej:
+a) Ekstensja
+b) Ekstensja - trwałość
+c) Atrybut złożony
+d) Atrybut opcjonalny
+e) Atrybut powtarzalny
+f) Atrybut klasowy
+g) Atrybut pochodny
+h) Metoda klasowa
+i) Przesłonięcie
+j) Przeciążenie
