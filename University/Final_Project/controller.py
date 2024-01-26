@@ -2,9 +2,10 @@ import sqlite3
 import os
 import models
 
-#Do przeglądania bazy danych: https://inloop.github.io/sqlite-viewer/
+# Do przeglądania bazy danych: https://inloop.github.io/sqlite-viewer/
 
 DATABASE_NAME = "PorownywarkaStomatologiczna.db"
+
 
 def checkDatabaseStatus():
     if os.path.exists(DATABASE_NAME):
@@ -13,19 +14,22 @@ def checkDatabaseStatus():
         createDatabase(DATABASE_NAME)
         print(f"Baza danych '{DATABASE_NAME}' została utworzona.")
 
+
 def createDatabase(database_path):
     conn = sqlite3.connect(database_path)
     conn.commit()
     conn.close()
     createTables()
     createSampleData()
+
+
 def createTables():
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
-    #Utwórz tabelę User
+    # Utwórz tabelę User
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS User (
-            userId INTEGER PRIMARY KEY,
+            userId INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             surname TEXT,
             pesel TEXT,
@@ -37,14 +41,14 @@ def createTables():
     ''')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS RoleDic (
-            RoleDicId INTEGER PRIMARY KEY,
+            RoleDicId INTEGER PRIMARY KEY AUTOINCREMENT,
             RoleName TEXT
         )
     ''')
-    #Utwórz tabelę Admin
+    # Utwórz tabelę Admin
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS Admin (
-            userId INTEGER PRIMARY KEY,
+            userId INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             surname TEXT,
             pesel TEXT,
@@ -57,10 +61,10 @@ def createTables():
             FOREIGN KEY (roleDicId) REFERENCES RoleDic(RoleDicId)
         )
     ''')
-    #Utwórz tabelę Dentist
+    # Utwórz tabelę Dentist
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS Dentist (
-            doctorId INTEGER PRIMARY KEY,
+            doctorId INTEGER PRIMARY KEY AUTOINCREMENT,
             activeAccount INTEGER,
             email TEXT,
             login TEXT,
@@ -75,16 +79,64 @@ def createTables():
             licenseNumber TEXT
         )
     ''')
+    # Utwórz tabelę Calendar
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS Calendar (
+            calendarId INTEGER PRIMARY KEY AUTOINCREMENT,
+            description TEXT,
+            excludedDate TEXT
+        )
+    ''')
+    # Utwórz tabelę CountryDic
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS CountryDic (
+            countryDicId INTEGER PRIMARY KEY AUTOINCREMENT,
+            countryName TEXT
+        )
+    ''')
+    # Utwórz tabelę CityDic
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS CityDic (
+            cityDicId INTEGER PRIMARY KEY AUTOINCREMENT,
+            countryDicId INTEGER,
+            cityName TEXT,
+            FOREIGN KEY (countryDicId) REFERENCES CountryDic(countryDicId)
+        )
+    ''')
+    # Utwórz tabelę Office
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS Office (
+            officeId INTEGER PRIMARY KEY AUTOINCREMENT,
+            cityDicId INTEGER,
+            countryDicId INTEGER,
+            address TEXT,
+            isActive INTEGER,
+            isNFZAvailable INTEGER,
+            officeName TEXT,
+            postCode TEXT,
+            webPageAddress TEXT,
+            FOREIGN KEY (cityDicId) REFERENCES CityDic(cityDicId),
+            FOREIGN KEY (countryDicId) REFERENCES CountryDic(countryDicId)
+        )
+    ''')
+    # Utwórz tabelę OpinionTypeDic
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS OpinionTypeDic (
+            opinionTypeDicId INTEGER PRIMARY KEY AUTOINCREMENT,
+            opinionTypeName TEXT
+        )
+    ''')
 
     # Wprowadź zmiany, zakończ połączenie
     conn.commit()
     conn.close()
 
-def createSampleData():             #Zapełnienie bazy danych przykłądowymi danymi
+
+def createSampleData():  # Zapełnienie bazy danych przykłądowymi danymi
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
 
-    #Tabela User ========================================================================================
+    # Tabela User ========================================================================================
     users_data = [
         ('John', 'Doe', '12345678901', 'john.doe@email.com', 0, 'john_doe', 'password123'),
         ('Alice', 'Smith', '98765432101', 'alice.smith@email.com', 1, 'alice_smith', 'pass123'),
@@ -103,7 +155,7 @@ def createSampleData():             #Zapełnienie bazy danych przykłądowymi da
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
     ''', users_data)
 
-    #Tabela RoleDic ========================================================================================
+    # Tabela RoleDic ========================================================================================
     roles_data = [
         ('Administrator',),
         ('Pracownik',),
@@ -111,7 +163,7 @@ def createSampleData():             #Zapełnienie bazy danych przykłądowymi da
     ]
     cursor.executemany('INSERT INTO RoleDic (RoleName) VALUES (?)', roles_data)
 
-    #Tabela Admin ========================================================================================
+    # Tabela Admin ========================================================================================
     admins_data = [
         ('John', 'Doe', '12345678901', 'john.doe@email.com', 0, 'john_doe', 'password123', '123456789', 1),
         ('Alice', 'Smith', '98765432101', 'alice.smith@email.com', 1, 'alice_smith', 'pass123', '987654321', 2),
@@ -142,8 +194,93 @@ def createSampleData():             #Zapełnienie bazy danych przykłądowymi da
             activeAccount, doctorId, email, login, password, name, surname, phone, isDentalProsthetics, isDentalSurgery, isOrthodontics, isPediatricDentist, licenseNumber
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', dentists_data)
-
+    # Tabela Calendar ========================================================================================
+    calendar_data = [
+        (1, 'Nowy Rok', '2024-01-01'),
+        (2, 'Trzech Króli (Objawienie Pańskie)', '2024-01-06'),
+        (3, 'Wielkanoc', '2024-03-31'),
+        (4, 'Poniedziałek Wielkanocny', '2024-04-01'),
+        (5, 'Święto Pracy', '2024-05-01'),
+        (6, 'Święto Konstytucji 3 Maja', '2024-05-03'),
+        (7, 'Zesłanie Ducha Świętego (Zielone Świątki)', '2024-05-19'),
+        (8, 'Boże Ciało', '2024-05-30'),
+        (9, 'Święto Wojska Polskiego, Wniebowzięcie Najświętszej Maryi Panny', '2024-08-15'),
+        (10, 'Wszystkich Świętych', '2024-11-01'),
+        (11, 'Święto Niepodległości', '2024-11-11'),
+        (12, 'Boże Narodzenie (pierwszy dzień)', '2024-12-25'),
+        (13, 'Boże Narodzenie (drugi dzień)', '2024-12-26'),
+    ]
+    cursor.executemany('''
+        INSERT INTO Calendar (
+            calendarId, description, excludedDate
+        ) VALUES (?, ?, ?)
+    ''', calendar_data)
+    # Tabela CountryDic ========================================================================================
+    countries_data = [
+        (1, 'Polska'),
+        (2, 'Stany Zjednoczone'),
+        (3, 'Japonia'),
+        (4, 'Niemcy'),
+        (5, 'Francja'),
+    ]
+    cursor.executemany('''
+        INSERT INTO CountryDic (
+            countryDicId, countryName
+        ) VALUES (?, ?)
+    ''', countries_data)
+    # Tabela CityDic ========================================================================================
+    cities_data = [
+        (1, 1, 'Warszawa'),
+        (2, 1, 'Kraków'),
+        (3, 2, 'Nowy Jork'),
+        (4, 2, 'Los Angeles'),
+        (5, 3, 'Tokio'),
+        (6, 3, 'Kioto'),
+        (7, 4, 'Berlin'),
+        (8, 5, 'Paryż'),
+    ]
+    cursor.executemany('''
+        INSERT INTO CityDic (
+            cityDicId, countryDicId, cityName
+        ) VALUES (?, ?, ?)
+    ''', cities_data)
+    # Tabela Office ========================================================================================
+    offices_data = [
+        (1, 1, 1, 'Marszalkowska 123', 1, 1, 'Warszawski Gabinet Ząb', '12345', 'http://www.example.com'),
+        (2, 2, 1, 'Aleja 3 maja', 1, 0, 'Kraków walczy z próchnicą', '54321', 'http://www.sample.com'),
+        (3, 3, 2, '6th Avenue 49', 1, 1, 'Amerykanie przeciwko chorym zębom', '67890', 'http://www.demo.com'),
+        (4, 4, 2, 'Beverly Boulevard 19', 1, 0, 'Upadłe zęby', '09876', 'http://www.test.com'),
+        (5, 5, 3, 'Shinjuku 13', 1, 1, 'Tokijski ząb', '13579', 'http://www.city.com'),
+        (6, 6, 3, 'Yokai Street 6', 1, 0, 'Potwory próchnicy', '24680', 'http://www.site.com'),
+        (7, 7, 4, 'Alexanderplatz 99', 1, 1, 'Alexander zębowy', '11223', 'http://www.visit.com'),
+        (8, 8, 5, 'Pola Elizejskie 66', 1, 0, 'Marsz paryski Dental', '33445', 'http://www.explore.com'),
+    ]
+    cursor.executemany('''
+        INSERT INTO Office (
+            officeId, cityDicId, countryDicId, address, isActive, isNFZAvailable, officeName, postCode, webPageAddress
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', offices_data)
+    # Tabela OpinionTypeDic ========================================================================================
+    opinion_types_data = [
+        (1, 'Usługa'),
+        (2, 'Lekarz'),
+        (3, 'Gabinet'),
+    ]
+    cursor.executemany('''
+        INSERT INTO OpinionTypeDic (
+            opinionTypeDicId, opinionTypeName
+        ) VALUES (?, ?)
+    ''', opinion_types_data)
 
     # Zatwierdzamy zmiany i zamykamy połączenie
     conn.commit()
     conn.close()
+
+
+def GetCountriesFromTable():
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('SELECT countryName FROM CountryDic')
+    allCountries = cursor.fetchall()
+    countriesNames = [country[0] for country in allCountries]
+    return countriesNames

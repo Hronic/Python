@@ -95,8 +95,9 @@ class Office():
         self.webPageAddress = webPageAddress
 
 class CityDic():
-    def __init__(self, cityDicId, cityName):
+    def __init__(self, cityDicId, countryDicId, cityName):
         self.cityDicId = cityDicId
+        self.countryDicId = countryDicId
         self.cityName = cityName
 
 class CountryDic():

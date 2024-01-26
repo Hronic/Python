@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-
+import controller
 
 # Sources:
 # https://www.pythontutorial.net/tkinter/tkinter-grid/
@@ -56,7 +56,8 @@ class MainPage(CenteredWindow):
         self.lblCountry.grid(column=1, row=1, sticky=tk.S, padx=5, pady=5)
         self.selected_country = tk.StringVar()
         self.cbo_selected_country = ttk.Combobox(self, textvariable=self.selected_country)
-        self.cbo_selected_country['values'] = ('Polska', 'Japonia', 'test')
+        self.cbo_selected_country['values'] = tuple(controller.GetCountriesFromTable())
+        #self.cbo_selected_country['values'] = ('Polska', 'Japonia', 'test')
         self.cbo_selected_country.grid(column=1, row=2, sticky=tk.S, padx=5, pady=5)
 
         self.lblCity = ttk.Label(text="Proszę wybrać miasto:")
