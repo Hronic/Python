@@ -5,6 +5,7 @@ import models
 # Do przeglądania bazy danych: https://inloop.github.io/sqlite-viewer/
 
 DATABASE_NAME = "PorownywarkaStomatologiczna.db"
+USER_LOGGED_IN = False
 
 
 def checkDatabaseStatus():
@@ -165,11 +166,11 @@ def createSampleData():  # Zapełnienie bazy danych przykłądowymi danymi
 
     # Tabela Admin ========================================================================================
     admins_data = [
-        ('John', 'Doe', '12345678901', 'john.doe@email.com', 0, 'john_doe', 'password123', '123456789', 1),
-        ('Alice', 'Smith', '98765432101', 'alice.smith@email.com', 1, 'alice_smith', 'pass123', '987654321', 2),
-        ('Bob', 'Johnson', '11122334455', 'bob.johnson@email.com', 0, 'bob_johnson', 'secret123', '111223344', 1),
-        ('Eva', 'Williams', '55566778899', 'eva.williams@email.com', 1, 'eva_williams', 'topsecret123', '555667788', 2),
-        ('Michael', 'Davis', '99900011122', 'michael.davis@email.com', 0, 'michael_davis', 'adminpass', '999000111', 1),
+        ('Dagmara', 'Jaworska', '12345678901', 'Dagmara.Jaworska@email.com', 0, 'semet', 'fQehqkywFk', '123456789', 1),
+        ('Balbina', 'Kowalska', '98765432101', 'Balbina.Kowalska@email.com', 1, 'thal', 'gWGuCKLQQr', '987654321', 2),
+        ('Danuta', 'Zalewska', '11122334455', 'Danuta.Zalewska@email.com', 0, 'lowern', '4VQskhHfHS', '111223344', 1),
+        ('Patrycja', 'Tomaszewska', '55566778899', 'Patrycja.Tomaszewska@email.com', 1, 'urmin', 'M537xMKgd7', '555667788', 2),
+        ('Czesława', 'Przybylska', '99900011122', 'Czesława.Przybylska@email.com', 0, 'mawer', '6n3MLKdMmv', '999000111', 1),
     ]
     cursor.executemany('''
         INSERT INTO Admin (
@@ -284,3 +285,35 @@ def GetCountriesFromTable():
     allCountries = cursor.fetchall()
     countriesNames = [country[0] for country in allCountries]
     return countriesNames
+
+
+def GetCitiesForCountry(strCountryName):
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM CountryDic WHERE countryName = ?", (strCountryName,))
+    oneCountry = cursor.fetchall()
+    countryId = oneCountry[0][0]  # get countryId
+
+    cursor.execute("SELECT * FROM 'CityDic' WHERE countryDicID = ?", (countryId,))
+    allCities = cursor.fetchall()
+    citiesName = [city[2] for city in allCities]
+    return citiesName
+
+
+def VerifyLogIn(username, password):
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM User WHERE login = ? AND password = ? AND isBlocked = 0", (username, password))
+    user_data = cursor.fetchone()
+    if user_data is None:
+        cursor.execute("SELECT * FROM Admin WHERE login = ? AND password = ? AND isBlocked = 0", (username, password))
+        user_data = cursor.fetchone()
+    conn.close()
+    if user_data:
+        print("Zalogowano pomyślnie!")
+        global USER_LOGGED_IN  # określenie jako zmaiennej globalnej
+        USER_LOGGED_IN = True  # zmiana wartości na zalogowanie
+        return USER_LOGGED_IN
+    else:
+        print("Błędny login lub hasło. Spróbuj ponownie.")
+        return USER_LOGGED_IN
