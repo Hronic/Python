@@ -1,9 +1,11 @@
 
 
 from views import MainPage
-import controller
+import databaseAndSamples
+import views
 
 if __name__ == '__main__':
-    controller.checkDatabaseStatus()
-    app = MainPage()
+    databaseAndSamples.checkDatabaseStatus()
+    app = views.PersonalPanel()  #TEST
+    #app = MainPage()
     app.mainloop()
