@@ -106,3 +106,29 @@ def DeletePersonalAccount():
     cursor.execute(update_user_query, (USER_LOGGED_ID,))
     conn.commit()
     conn.close()
+
+def CheckIfNewDataIsAvailable(newPesel, newEmail, newLogin):
+    #Sprawdza, czy istnieje w systmeie inna osoba, która zajmuje już wskazany pesel, mail lub login
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    check_user_query = """
+        SELECT userId
+        FROM User
+        WHERE (pesel = ? OR login = ? OR email = ?) AND userId != ?
+    """
+    cursor.execute(check_user_query, (newPesel, newLogin, newEmail, USER_LOGGED_ID))
+    existing_user = cursor.fetchone()
+    conn.close()
+    return existing_user is not None
+def UpdatePersonalAccount(newName, newSurname, newPesel, newEmail, newLogin, newPassword):
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    global USER_LOGGED_ID
+    update_user_query = """
+        UPDATE User
+        SET name = ?, surname = ?, pesel = ?, email = ?, login = ?, password = ?
+        WHERE userId = ?
+    """
+    cursor.execute(update_user_query, (newName, newSurname, newPesel, newEmail, newLogin, newPassword, USER_LOGGED_ID))
+    conn.commit()
+    conn.close()

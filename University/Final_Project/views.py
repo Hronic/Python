@@ -277,9 +277,17 @@ class PersonalData(InputPersonalData):
         self.peselEntry.insert(0, arrData[3])
 
     def SaveData(self):
-        #Sprawdź poprawność danych
-        #Zapisz dane
-        pass
+        strLogin = self.loginEntry.get()
+        strPassword = self.passwordEntry.get()
+        strEmail = self.emailEntry.get()
+        strName = self.nameEntry.get()
+        strSurname = self.surnameEntry.get()
+        strPesel = self.peselEntry.get()
+        blnDataExists = controller.CheckIfNewDataIsAvailable(strPesel, strEmail, strLogin)
+        if blnDataExists:
+            print("Wskazane dane już są zajęte.")
+        else:
+            controller.UpdatePersonalAccount(strName, strSurname, strPesel, strEmail, strLogin, strPassword)
 
 class FindRecords(CenteredWindow):
     def __init__(self):
