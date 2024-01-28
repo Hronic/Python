@@ -314,6 +314,11 @@ def createSampleData():  # Zapełnienie bazy danych przykłądowymi danymi
         (6, 6, 3, 'Yokai Street 6', 1, 0, 'Potwory próchnicy', '24680', 'http://www.site.com'),
         (7, 7, 4, 'Alexanderplatz 99', 1, 1, 'Alexander zębowy', '11223', 'http://www.visit.com'),
         (8, 8, 5, 'Pola Elizejskie 66', 1, 0, 'Marsz paryski Dental', '33445', 'http://www.explore.com'),
+        (9, 1, 1, 'Bagno 5', 1, 1, 'Nawet nie poczujesz', '12345', 'http://www.example.com'),
+        (10, 1, 1, 'Władysława Andera 9', 1, 0, 'Bohaterów', '12345', 'http://www.example.com'),
+        (11, 1, 1, 'Koszykowa 5', 1, 0, 'PJATS', '12345', 'http://www.example.com'),
+        (12, 1, 1, 'Dowcip 69', 0, 0, 'Wyrywanie na gazie', '12345', 'http://www.example.com'),
+        (13, 1, 1, 'Dzika 666', 0, 1, 'Dzikie rwanie', '12345', 'http://www.example.com'),
     ]
     cursor.executemany('''
         INSERT INTO Office (

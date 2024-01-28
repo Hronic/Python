@@ -6,6 +6,7 @@ import views
 
 if __name__ == '__main__':
     databaseAndSamples.checkDatabaseStatus()
-    app = views.PersonalPanel()  #TEST
+    app = views.MakeReservation(1)  #TEST
     #app = MainPage()
+
     app.mainloop()

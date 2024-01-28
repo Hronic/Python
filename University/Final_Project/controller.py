@@ -3,6 +3,8 @@ import sqlite3
 DATABASE_NAME = "PorownywarkaStomatologiczna.db"
 USER_LOGGED_IN = False
 USER_LOGGED_ID = None
+
+
 def GetCountriesFromTable():
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
@@ -27,7 +29,7 @@ def GetCitiesForCountry(strCountryName):
 
 
 def VerifyLogIn(username, password):
-    #Sprawdza, czy dane do logowania + hasło są poprawne
+    # Sprawdza, czy dane do logowania + hasło są poprawne
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM User WHERE login = ? AND password = ? AND isBlocked = 0", (username, password))
@@ -47,8 +49,9 @@ def VerifyLogIn(username, password):
         print("Błędny login lub hasło. Spróbuj ponownie.")
         return USER_LOGGED_IN
 
+
 def GetUserId(strLogin):
-    #Zwraca Id użytkownika o danym loginie
+    # Zwraca Id użytkownika o danym loginie
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM User WHERE login = ?", (strLogin,))
@@ -59,8 +62,9 @@ def GetUserId(strLogin):
     else:
         return user_data[0]
 
+
 def isUserDuplicate(strLogin, strEmail, strPesel):
-    #Sprawdza, czy istnieje użytkownik o danym loginie, mailu lub peselu
+    # Sprawdza, czy istnieje użytkownik o danym loginie, mailu lub peselu
     query = "SELECT EXISTS (SELECT 1 FROM User WHERE login = ? OR email = ? OR pesel = ? LIMIT 1);"
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
@@ -70,8 +74,9 @@ def isUserDuplicate(strLogin, strEmail, strPesel):
     blnResult = bool(result)
     return blnResult
 
+
 def CreateNewUserRecord(strName, strSurname, strPesel, strEmail, strLogin, strPassword):
-    #Tworzy nowy rekord użytkownika
+    # Tworzy nowy rekord użytkownika
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     sql_insert_user = '''
@@ -81,6 +86,7 @@ def CreateNewUserRecord(strName, strSurname, strPesel, strEmail, strLogin, strPa
     cursor.execute(sql_insert_user, (strName, strSurname, strPesel, strEmail, 0, strLogin, strPassword))
     conn.commit()
     conn.close()
+
 
 def LoadPersonalDataIntoForm():
     conn = sqlite3.connect(DATABASE_NAME)
@@ -93,6 +99,7 @@ def LoadPersonalDataIntoForm():
         return list(userData)
     else:
         return None
+
 
 def DeletePersonalAccount():
     conn = sqlite3.connect(DATABASE_NAME)
@@ -107,8 +114,9 @@ def DeletePersonalAccount():
     conn.commit()
     conn.close()
 
+
 def CheckIfNewDataIsAvailable(newPesel, newEmail, newLogin):
-    #Sprawdza, czy istnieje w systmeie inna osoba, która zajmuje już wskazany pesel, mail lub login
+    # Sprawdza, czy istnieje w systmeie inna osoba, która zajmuje już wskazany pesel, mail lub login
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     check_user_query = """
@@ -120,6 +128,8 @@ def CheckIfNewDataIsAvailable(newPesel, newEmail, newLogin):
     existing_user = cursor.fetchone()
     conn.close()
     return existing_user is not None
+
+
 def UpdatePersonalAccount(newName, newSurname, newPesel, newEmail, newLogin, newPassword):
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
@@ -132,3 +142,71 @@ def UpdatePersonalAccount(newName, newSurname, newPesel, newEmail, newLogin, new
     cursor.execute(update_user_query, (newName, newSurname, newPesel, newEmail, newLogin, newPassword, USER_LOGGED_ID))
     conn.commit()
     conn.close()
+
+
+def getUserOpinions(userId):
+    # Metoda zwraca opinie dla użytkownika o podanym userId
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM Opinion
+        WHERE userId = ?
+    ''', (userId,))
+    opinionsData = cursor.fetchall()
+    conn.close()
+    return opinionsData
+
+
+def getOfficesData(country, city):
+    #Pobierz gabinety dla danego kraju i miasta
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT officeId, officeName, address, postCode, isNFZAvailable, webPageAddress FROM Office
+        WHERE cityDicId = (SELECT cityDicId FROM CityDic WHERE cityName = ?)
+        AND countryDicId = (SELECT countryDicId FROM CountryDic WHERE countryName = ?)
+        AND isActive = 1
+    ''', (city, country))
+    officesData = [(row[0], row[1], row[2], row[3], row[4], row[5]) for row in cursor.fetchall()]
+    list_ids = [row[0] for row in officesData]
+    formattedOffices = [
+        f"{name}, na ulicy {address}, kod pocztowy: {postCode}, adres www: {webPageAddress}, {'Obsługuje NFZ' if isNFZAvailable else 'Nie obsługuje NFZ'}"
+        for id, name, address, postCode, isNFZAvailable, webPageAddress in officesData
+    ]
+    conn.close()
+    return list_ids, formattedOffices
+
+def getSpecificOfficeInfo(officeId):
+    #Pobierz gabinety dla danego kraju i miasta
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT officeId, cityDicId, countryDicId, address, 	isNFZAvailable, officeName, address, postCode, webPageAddress
+        FROM Office
+        WHERE isActive = 1 AND officeId = ? 
+    ''', (officeId,))
+    officesData = [(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]) for row in cursor.fetchall()]
+    list_ids = [row[0] for row in officesData]
+    formattedOffices = [
+        f"{name}, na ulicy {address}, kod pocztowy: {postCode}, adres www: {webPageAddress}, {'Obsługuje NFZ' if isNFZAvailable else 'Nie obsługuje NFZ'}"
+        for officeId, cityDicId, countryDicId, address, isNFZAvailable, officeName, address, postCode, webPageAddress in officesData
+    ]
+    conn.close()
+    return list_ids, formattedOffices
+
+def get_office_opinions(officeIdd):
+    # Pobierz opinie dla danego gabinetu
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM Opinion
+        WHERE reviewedEntryId = ? AND opinionTypeDicId = 3
+     ''', (officeIdd,))
+
+    opinionsData = cursor.fetchall()
+    formattedData = [
+        f"Opinia dodana: {creationDate}, wartość oceny: {stars}, treść: {opinionValue}."
+        for id, userId, opinionTypeId, reviewdEntryId, creationDate, opinionValue, stars in opinionsData
+    ]
+    conn.close()
+    return formattedData
