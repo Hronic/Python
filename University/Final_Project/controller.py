@@ -181,15 +181,17 @@ def getSpecificOfficeInfo(officeId):
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT officeId, cityDicId, countryDicId, address, 	isNFZAvailable, officeName, address, postCode, webPageAddress
-        FROM Office
-        WHERE isActive = 1 AND officeId = ? 
+        SELECT o.officeId, c.cityName, co.countryName, o.address, o.isNFZAvailable, o.officeName, o.address, o.postCode, o.webPageAddress
+        FROM Office o
+        JOIN CityDic c ON o.cityDicId = c.cityDicId
+        JOIN CountryDic co ON o.countryDicId = co.countryDicId
+        WHERE o.isActive = 1 AND o.officeId = ? 
     ''', (officeId,))
     officesData = [(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]) for row in cursor.fetchall()]
-    list_ids = [row[0] for row in officesData]
+    list_ids = [row[0] for row in officesData]  #get Ids
     formattedOffices = [
-        f"{name}, na ulicy {address}, kod pocztowy: {postCode}, adres www: {webPageAddress}, {'Obsługuje NFZ' if isNFZAvailable else 'Nie obsługuje NFZ'}"
-        for officeId, cityDicId, countryDicId, address, isNFZAvailable, officeName, address, postCode, webPageAddress in officesData
+        f"Gabinet: {officeName}, \nadres: {countryName} {cityName} {address} {postCode}, \nadres www: {webPageAddress}, \n{'Obsługuje NFZ' if isNFZAvailable else 'Nie obsługuje NFZ'}"
+        for officeId, cityName, countryName, address, isNFZAvailable, officeName, address, postCode, webPageAddress in officesData
     ]
     conn.close()
     return list_ids, formattedOffices
@@ -210,3 +212,53 @@ def get_office_opinions(officeIdd):
     ]
     conn.close()
     return formattedData
+
+def MakeSpecificReservation(officeId, date, discountCode):
+    officeIdReservation = officeId[0]
+    global USER_LOGGED_ID
+    discountId = None
+    discountValue = None
+    isValue = None
+    finalPrice = None
+
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM Discount
+        WHERE isActive = 1 AND discountCode = ?;
+    ''', (discountCode,))
+    result = cursor.fetchone()
+    if result:
+        if isinstance(result, tuple):
+            discountId = result[0]
+            discountValue = result[3]
+            isValue = result[5]
+    else:
+        discountId = 1
+        print(f"Brak kodu rabatowego o kodzie: {discountCode}")
+
+
+    cursor.execute('''
+        SELECT * FROM SpecificService
+        WHERE officeId = ?
+    ''', (officeIdReservation,))
+    opinionsData = cursor.fetchall()
+    #specificServiceId, dentistId, officeId, price, serviceTypeGeneralId
+    specificService = [(row[0], row[1], row[2], row[3], row[4]) for row in opinionsData]
+    specificServiceId = specificService[0][0]
+    finalPrice = specificService[0][3]
+    if discountId != 1:
+        if isValue == 1:
+            finalPrice = finalPrice - discountValue
+        else:
+            finalPrice = (1-discountValue) * finalPrice
+    else:
+        finalPrice = specificService[0][3]
+
+    cursor.execute('''
+        INSERT INTO Reservation (finalPrice, discountId, otherComments, reservationDate, reservationStatus, SpecificServiceId, userId)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
+    ''', (finalPrice, discountId, "Brak", date, "Potwierdzone", specificServiceId, USER_LOGGED_ID))
+    conn.commit()
+    conn.close()
+

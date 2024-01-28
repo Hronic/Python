@@ -338,11 +338,11 @@ def createSampleData():  # Zapełnienie bazy danych przykłądowymi danymi
     ''', opinion_types_data)
     #Tabela Discounts ========================================================================================
     discounts_data = [
-        (1, 'DISCOUNT123', 0.2, 1, 1),
+        (1, 'Brak', 0, 1, 1),
         (1, 'SALE50', 0.5, 1, 0),
         (2, 'NEWCLIENT', 0.1, 1, 0),
-        (2, 'OFFICEOPENING', 0.15, 1, 1),
-        (3, 'WEEKENDSALE', 0.3, 1, 1),
+        (2, 'OFFICEOPENING', 30, 1, 1),
+        (3, 'WEEKENDSALE', 60, 1, 1),
     ]
     cursor.executemany('''
         INSERT INTO Discount (
@@ -351,11 +351,11 @@ def createSampleData():  # Zapełnienie bazy danych przykłądowymi danymi
     ''', discounts_data)
     #Tabela Opinions ========================================================================================
     opinions_data = [
-        (1, 1, 1, 1, '2024-01-02', 'Bardzo dobre doświadczenie', 5),
-        (2, 2, 2, 2, '2024-01-03', 'Średnie wrażenia', 3),
-        (3, 3, 1, 3, '2024-01-05', 'Bardzo miła obsługa', 4),
-        (4, 4, 2, 1, '2024-01-07', 'Złe doświadczenie', 2),
-        (5, 5, 1, 2, '2024-01-10', 'Bardzo polecam', 5),
+        (1, 1, 1, 1, '02-01-2024', 'Bardzo dobre doświadczenie', 5),
+        (2, 2, 2, 2, '01-03-2024', 'Średnie wrażenia', 3),
+        (3, 3, 1, 3, '01-05-2024', 'Bardzo miła obsługa', 4),
+        (4, 4, 2, 1, '01-07-2024', 'Złe doświadczenie', 2),
+        (5, 5, 1, 2, '01-10-2024', 'Bardzo polecam', 5),
     ]
     cursor.executemany('''
         INSERT INTO Opinion (
@@ -387,9 +387,9 @@ def createSampleData():  # Zapełnienie bazy danych przykłądowymi danymi
     ''', specific_services_data)
     # Tabela Reservation ========================================================================================
     reservations_data = [
-        (150.0, 1, 'Brak uwag', '2024-01-10', 'Potwierdzone', 1, 2),
-        (200.0, 2, 'Proszę o wcześniejsze potwierdzenie', '2024-02-15', 'Oczekujące', 2, 3),
-        (120.0, 3, 'Zniżka studencka', '2024-03-20', 'Anulowane', 3, 1),
+        (150.0, 1, 'Brak uwag', '10-01-2024', 'Potwierdzone', 1, 2),
+        (200.0, 2, 'Proszę o wcześniejsze potwierdzenie', '15-02-2024', 'Oczekujące', 2, 3),
+        (120.0, 3, 'Zniżka studencka', '20-03-2024', 'Anulowane', 3, 1),
     ]
     cursor.executemany('''
         INSERT INTO Reservation (

@@ -274,7 +274,7 @@ class PersonalPanel(CenteredWindow):
         self.MyPersonalData.grid(column=1, row=0, sticky=tk.NS, padx=5, pady=5)
         self.MyOpinions = ttk.Button(self, text="Moje opinie", command=lambda: self.CloseOpen("MyOpinions"))
         self.MyOpinions.grid(column=1, row=1, sticky=tk.NS, padx=5, pady=5)
-        self.MyReviews = ttk.Button(self, text="Moje recenzje", command=lambda: self.CloseOpen("MyReservations"))
+        self.MyReviews = ttk.Button(self, text="Moje rezerwacje", command=lambda: self.CloseOpen("MyReservations"))
         self.MyReviews.grid(column=1, row=2, sticky=tk.NS, padx=5, pady=5)
         self.MyReviews = ttk.Button(self, text="Usuń konto", command=lambda: self.DeleteData())
         self.MyReviews.grid(column=1, row=3, sticky=tk.NS, padx=5, pady=5)
@@ -418,7 +418,7 @@ class FindRecords(CenteredWindow):
 
         self.goBackButton = ttk.Button(self, text="Cofnij", command=lambda: self.CloseOpen("MainPage"))
         self.goBackButton.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
-        self.reserveOffice = ttk.Button(self, text="Zarezerwuj", command=lambda: self.CloseOpen("PersonalPanel"))
+        self.reserveOffice = ttk.Button(self, text="Zarezerwuj", command=lambda: self.MakeReservation())
         self.reserveOffice.grid(column=4, row=0, sticky=tk.W, padx=5, pady=5)
         self.lookOpinions = ttk.Button(self, text="Zobacz opinie", command=lambda: self.OpenOpinionsWindow())
         self.lookOpinions.grid(column=2, row=7, sticky=tk.W, padx=5, pady=5)
@@ -490,8 +490,10 @@ class MakeReservation(CenteredWindow):
     def __init__(self, indicatedOffice):
         super().__init__()
         self.selected_date_label = None
+        self.selectedDate = None
+        self.discountInserted = None
 
-        WINDOW_SIZE_NORMAL = "300x180"
+        WINDOW_SIZE_NORMAL = "450x260"
         self.GeneralWindowOptions()
         self.geometry(WINDOW_SIZE_NORMAL)
         self.title('Wykonaj rezerwacje')
@@ -500,25 +502,37 @@ class MakeReservation(CenteredWindow):
 
         self.InfoLabel = ttk.Label(self, text="Wykonaj rezerwacje dla gabinetu:")
         self.InfoLabel.grid(column=0, row=0, columnspan=2, sticky="nsew", padx=5, pady=5)
-        self.OfficeInfo = ttk.Label(self, text="dane gabinetu XXXX:")
+        listOfIds, ListOfOfficeData = controller.getSpecificOfficeInfo(indicatedOffice)
+        self.OfficeInfo = ttk.Label(self, text=ListOfOfficeData[0])
         self.OfficeInfo.grid(column=0, row=1, columnspan=2, sticky="nsew", padx=5, pady=5)
+
+        self.discountLabel = ttk.Label(self, text="Wprowadź kod rabatowy:")
+        self.discountLabel.grid(column=0, row=2, columnspan=1, sticky="nsew", padx=5, pady=5)
+        self.discountValue = ttk.Entry(self)
+        self.discountValue.grid(column=1, row=2, sticky=tk.E, padx=5, pady=5)
+
         self.selected_date_label = ttk.Label(self, text="Wybierz datę!")
-        self.selected_date_label.grid(column=0, row=2, columnspan=2, sticky="nsew", padx=5, pady=5)
-
+        self.selected_date_label.grid(column=0, row=3, columnspan=2, sticky="nsew", padx=5, pady=5)
         self.btnChooseDate = ttk.Button(self, text="Wybierz datę", command=self.choose_date)
-        self.btnChooseDate.grid(column=0, row=3, columnspan=2, sticky="nsew", padx=5, pady=5)
+        self.btnChooseDate.grid(column=0, row=4, columnspan=2, sticky="nsew", padx=5, pady=5)
 
-        self.exitApp = ttk.Button(self, text="Zarezerwuj", command=lambda: self.CloseWindow())
+        self.exitApp = ttk.Button(self, text="Zarezerwuj", command=lambda: self.MakeReservationForDate(listOfIds))
         self.exitApp.grid(column=0, row=7, sticky=tk.W, padx=5, pady=5)
         self.closeWindow = ttk.Button(self, text="Zamknij Okno", command=self.destroy)
-        self.closeWindow.grid(column=1, row=7, sticky=tk.W, padx=5, pady=5)
+        self.closeWindow.grid(column=1, row=7, sticky=tk.E, padx=5, pady=5)
 
     def choose_date(self):
         date_chooser = DateChooser(self, self.on_date_selected)
 
     def on_date_selected(self, selected_date):
-        self.selected_date_label.config(text=f"Wybrana data: {selected_date}")
+        parsed_date = datetime.strptime(selected_date, "%m/%d/%y")
+        formatted_date = parsed_date.strftime("%d-%m-%Y")
+        self.selected_date_label.config(text=f"Wybrana data: {formatted_date}")
+        self.selectedDate = formatted_date
 
+    def MakeReservationForDate(self, officeId):
+        self.discountInserted = self.discountValue.get()
+        controller.MakeSpecificReservation(officeId, self.selectedDate, self.discountInserted)
 
 class DateChooser(tk.Toplevel):
     def __init__(self, parent, callback):
