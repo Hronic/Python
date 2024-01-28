@@ -369,7 +369,7 @@ class MyOpinions(CenteredWindow):
 class MyReservations(CenteredWindow):
     def __init__(self):
         super().__init__()
-        WINDOW_SIZE_NORMAL = "270x145"
+        WINDOW_SIZE_NORMAL = "650x300"
         self.GeneralWindowOptions()
         self.geometry(WINDOW_SIZE_NORMAL)
         self.title('Moje rezerwacje')
@@ -384,21 +384,18 @@ class MyReservations(CenteredWindow):
         self.recordsListbox = tk.Listbox(self, width=50, height=10)
         self.recordsListbox.grid(column=0, row=1, columnspan=3, sticky="nsew", padx=10, pady=10)
 
-        opinionsData = controller.getUserOpinions(controller.USER_LOGGED_ID)
-        opinion_type_mapping = {
-            1: 'Pozytywna',
-            2: 'Neutralna',
-            3: 'Negatywna'
-        }
+        reservationData = controller.getUserReservations(controller.USER_LOGGED_ID)
         # Wyświetl opinie w self.records_listbox
-        for opinion in opinionsData:
+        for reservation in reservationData:
             # Pomijaj kolumnę opinionId (0), userId (1) i zamień opinionTypeDicId
-            formatted_opinion = [opinion_type_mapping.get(opinion[2], 'Nieznany')] + list(opinion[3:])
-            self.recordsListbox.insert(tk.END, formatted_opinion)
+            finalPrice, discountId, comments, reservationDate, status, specificServiceId = reservation[1], reservation[2], reservation[3], reservation[4], reservation[5], reservation[6]
+            officeId = controller.getOfficeIdFromSpecificService(specificServiceId)
+            list_ids, formattedOffices = controller.getSpecificOfficeInfo(officeId)
+            formattedReservation = f"Rezerwacja w cenie  {finalPrice} PLN, dnia: {reservationDate}. Status: {status}, gabinet: {formattedOffices}, komentarze: {comments}"
+            self.recordsListbox.insert(tk.END, formattedReservation)
 
         self.exitAppButton = ttk.Button(self, text="Wyjście", command=lambda: self.CloseWindow())
         self.exitAppButton.grid(column=2, row=2, sticky=tk.E, padx=5, pady=5)
-
 
 class FindRecords(CenteredWindow):
     def __init__(self, country, city):

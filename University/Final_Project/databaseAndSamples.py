@@ -198,7 +198,7 @@ def createSampleData():  # Zapełnienie bazy danych przykłądowymi danymi
 
     # Tabela User ========================================================================================
     users_data = [
-        ('John', 'Doe', '12345678901', 'john.doe@email.com', 0, 'john_doe', 'password123'),
+        ('John', 'Doe', '12345678901', 'john.doe@email.com', 0, 'mb', '1'),
         ('Alice', 'Smith', '98765432101', 'alice.smith@email.com', 1, 'alice_smith', 'pass123'),
         ('Bob', 'Johnson', '11122334455', 'bob.johnson@email.com', 0, 'bob_johnson', 'secret123'),
         ('Eva', 'Williams', '55566778899', 'eva.williams@email.com', 1, 'eva_williams', 'topsecret123'),

@@ -156,7 +156,29 @@ def getUserOpinions(userId):
     conn.close()
     return opinionsData
 
+def getUserReservations(userId):
+    # Metoda zwraca rezerwacje dla użytkownika o podanym userId
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM Reservation
+        WHERE userId = ?
+    ''', (userId,))
+    reservationData = cursor.fetchall()
+    conn.close()
+    return reservationData
 
+def getOfficeIdFromSpecificService(specificServiceId):
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM SpecificService
+        WHERE specificServiceId = ?
+    ''', (specificServiceId,))
+    specificServiceData = cursor.fetchall()
+    officeId = specificServiceData[0][2]
+    conn.close()
+    return officeId
 def getOfficesData(country, city):
     #Pobierz gabinety dla danego kraju i miasta
     conn = sqlite3.connect(DATABASE_NAME)
@@ -177,7 +199,7 @@ def getOfficesData(country, city):
     return list_ids, formattedOffices
 
 def getSpecificOfficeInfo(officeId):
-    #Pobierz gabinety dla danego kraju i miasta
+    #Pobierz informacje o konkretnym gabinecie na podstawie officeId
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     cursor.execute('''
