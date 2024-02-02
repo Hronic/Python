@@ -6,7 +6,7 @@ import views
 
 if __name__ == '__main__':
     databaseAndSamples.checkDatabaseStatus()
-    app = views.AddOpinion(1)
+    #app = views.AddOpinion(1)
 
-    #app = MainPage()
+    app = MainPage()
     app.mainloop()

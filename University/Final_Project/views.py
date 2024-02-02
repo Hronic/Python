@@ -336,7 +336,7 @@ class PersonalData(InputPersonalData):
 class MyOpinions(CenteredWindow):
     def __init__(self):
         super().__init__()
-        WINDOW_SIZE_NORMAL = "450x250"
+        WINDOW_SIZE_NORMAL = "600x250"
         self.GeneralWindowOptions()
         self.geometry(WINDOW_SIZE_NORMAL)
         self.title('Moje opinie')
@@ -352,15 +352,12 @@ class MyOpinions(CenteredWindow):
         self.recordsListbox.grid(column=0, row=1, columnspan=3, sticky="nsew", padx=10, pady=10)
 
         opinionsData = controller.getUserOpinions(controller.USER_LOGGED_ID)
-        opinion_type_mapping = {
-            1: 'Pozytywna',
-            2: 'Neutralna',
-            3: 'Negatywna'
-        }
+
         # Wyświetl opinie w self.records_listbox
+        # opinionId,	userId,	opinionTypeDicId, reviewedEntryId, creationDate, opinionValue, stars
         for opinion in opinionsData:
-            # Pomijaj kolumnę opinionId (0), userId (1) i zamień opinionTypeDicId
-            formatted_opinion = [opinion_type_mapping.get(opinion[2], 'Nieznany')] + list(opinion[3:])
+            opinionType = controller.opinionIdToOpinionName(opinion[2])
+            formatted_opinion = f"Opinia {opinionType}, , utworzona: {opinion[4]}, treść: {opinion[5]}, wartość: {opinion[6]}"
             self.recordsListbox.insert(tk.END, formatted_opinion)
 
         self.exitAppButton = ttk.Button(self, text="Wyjście", command=lambda: self.CloseWindow())
@@ -435,7 +432,7 @@ class MyReservations(CenteredWindow):
 
 
 class AddOpinion(CenteredWindow):
-    def __init__(self, opinionId):
+    def __init__(self, selectedReservationId):
         super().__init__()
         WINDOW_SIZE_NORMAL = "660x220"
         self.GeneralWindowOptions()
@@ -448,7 +445,7 @@ class AddOpinion(CenteredWindow):
 
         self.opinionStars = 0
         self.opinionType = None
-
+        self.opinionEntity = None
 
         self.InfoLabelChoice = ttk.Label(self, text="Co oceniasz?")
         self.InfoLabelChoice.grid(column=0, row=0, sticky=tk.E, padx=5, pady=5)
@@ -477,22 +474,26 @@ class AddOpinion(CenteredWindow):
         self.labelError.grid(column=0, row=4, sticky=tk.E, padx=5, pady=5)
         self.labelError.grid_remove()
 
-        self.SaveOpinion = ttk.Button(self, text="Dodaj opinie", command=lambda: self.SaveOpinionInDatabase())
+        self.SaveOpinion = ttk.Button(self, text="Dodaj opinie",
+                                      command=lambda: self.SaveOpinionInDatabase(selectedReservationId))
         self.SaveOpinion.grid_remove()
 
         self.closeWindow = ttk.Button(self, text="Zamknij okno", command=lambda: self.destroy())
         self.closeWindow.grid(column=3, row=5, sticky=tk.E, padx=5, pady=5)
 
-    def SaveOpinionInDatabase(self):
+    def SaveOpinionInDatabase(self, selectedReservationId):
         textContent = self.text.get('1.0', 'end')
-        controller.saveOpinionToDatabase(textContent, self.opinionType, self.opinionStars)
+        self.opinionType = controller.opinionNameToOpinionId(self.opinionType)
+        self.opinionEntity = controller.getOpinionatedEntity(self.opinionType, selectedReservationId)
+        controller.saveOpinionToDatabase(textContent, self.opinionType, self.opinionEntity, self.opinionStars)
+        self.destroy()
 
     def onOpinionTypeSelected(self, event):
-        self.opinionType = self.opinionTypeSelected.get()
+        self.opinionType = self.cboSelectedOpinionType.get()
         self.VerifyComboBoxes()
 
     def onStarsSelected(self, event):
-        self.opinionStars = self.opinionStarsSelected.get()
+        self.opinionStars = self.cboSelectedStars.get()
         self.VerifyComboBoxes()
 
     def VerifyComboBoxes(self):

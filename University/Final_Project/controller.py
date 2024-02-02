@@ -164,11 +164,15 @@ def getUserOpinions(userId):
         WHERE userId = ?
     ''', (userId,))
     opinionsData = cursor.fetchall()
+    opinionsList = []
+    for opinion in opinionsData:
+        opinion_list = list(opinion)
+        opinionsList.append(opinion_list)
     conn.close()
-    return opinionsData
+    return opinionsList
 
 
-def saveOpinionToDatabase(opinionText, opinionTypeDicId, stars):
+def saveOpinionToDatabase(opinionText, opinionTypeDicId, opinionEntity, stars):
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     global USER_LOGGED_ID
@@ -176,8 +180,80 @@ def saveOpinionToDatabase(opinionText, opinionTypeDicId, stars):
     cursor.execute('''
         INSERT INTO Opinion (userId, opinionTypeDicId, reviewedEntryId, creationDate, opinionValue, stars)
         VALUES (?, ?, ?, ?, ?, ?)
-    ''', (USER_LOGGED_ID, opinionTypeDicId, 1, currentDate, opinionText, stars))
+    ''', (USER_LOGGED_ID, opinionTypeDicId, opinionEntity, currentDate, opinionText, stars))
+    conn.commit()
     conn.close()
+
+
+def opinionNameToOpinionId(opinionName):
+    opinionTypeDicId = None
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM OpinionTypeDic
+        WHERE opinionTypeName = ?
+    ''', (opinionName,))
+    opinionTypeData = cursor.fetchone()
+    if opinionTypeData:
+        opinionTypeDicId, opinionTypeName = opinionTypeData
+    return opinionTypeDicId
+
+
+def opinionIdToOpinionName(opinionId):
+    opinionTypeName = None
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM OpinionTypeDic
+        WHERE opinionTypeDicId = ?
+    ''', (opinionId,))
+    opinionTypeData = cursor.fetchone()
+    if opinionTypeData:
+        opinionTypeDicId, opinionTypeName = opinionTypeData
+    return opinionTypeName
+
+
+def getOpinionatedEntity(opinionType, selectedReservationId):
+    opinionatedEntityResult = None
+    specificServiceId = None
+    dentistId = None
+    officeId = None
+    serviceTypeGeneralId = None
+
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM Reservation
+        WHERE reservationId = ?
+    ''', (selectedReservationId,))
+    reservationData = cursor.fetchone()
+    if reservationData:
+        reservationId, finalPrice, discountId, otherComments, reservationDate, reservationStatus, specificServiceId, userId = reservationData
+
+    cursor.execute('''
+        SELECT * FROM SpecificService
+        WHERE specificServiceId = ?
+    ''', (specificServiceId,))
+    specificServiceData = cursor.fetchone()
+
+    if specificServiceData:
+        specificServiceId, dentistId, officeId, price, serviceTypeGeneralId = specificServiceData
+
+    conn.close()
+
+    if opinionType == 1:  # usługa
+        opinionatedEntityResult = serviceTypeGeneralId
+    elif opinionType == 2:  # Lekarz
+        opinionatedEntityResult = dentistId
+        pass
+    elif opinionType == 3:  # gabinet
+        opinionatedEntityResult = officeId
+        pass
+    else:
+        print("Nierpozoznany typ usłgui!")
+        pass
+
+    return opinionatedEntityResult
 
 
 def getUserReservations(userId):
