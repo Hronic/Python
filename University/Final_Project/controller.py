@@ -343,7 +343,7 @@ def get_office_opinions(officeIdd):
     return formattedData
 
 
-def MakeSpecificReservation(officeId, date, discountCode):
+def MakeSpecificReservation(officeId, date, discountCode, specificServiceType):
     officeIdReservation = officeId[0]
     global USER_LOGGED_ID
     discountId = None
@@ -374,7 +374,13 @@ def MakeSpecificReservation(officeId, date, discountCode):
     opinionsData = cursor.fetchall()
     # specificServiceId, dentistId, officeId, price, serviceTypeGeneralId
     specificService = [(row[0], row[1], row[2], row[3], row[4]) for row in opinionsData]
-    specificServiceId = specificService[0][0]
+    specificServiceId = None
+    specificServiceTypeId = convertSpecificServiceNameToId(specificServiceType)
+    for row in specificService:
+        if specificServiceTypeId == row[4]:
+            specificServiceId = row[0]
+            break
+
     finalPrice = specificService[0][3]
     if discountId != 1:
         if isValue == 1:
@@ -406,3 +412,49 @@ def isDateNotHoliday(dateToBeValidated):
             blnDateCorrectness = False
             break
     return blnDateCorrectness
+
+
+def getServicesForOffice(officeId):
+    resultTuple = []
+    uniqueValues = set()
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+            SELECT * FROM SpecificService
+            WHERE officeId = ?
+        ''', (officeId,))
+    specificServicesData = cursor.fetchall()
+    for row in specificServicesData:
+        specificService = row[4]
+        uniqueValues.add(specificService)
+    conn.close()
+    for value in uniqueValues:
+        uniqueValueName = convertSpecificServiceIdToName(value)
+        resultTuple.append(uniqueValueName)
+    return resultTuple
+
+
+def convertSpecificServiceIdToName(specificServiceTypeId):
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+            SELECT * FROM ServiceTypeGeneral
+            WHERE serviceTypeGeneralId = ?
+        ''', (specificServiceTypeId,))
+    specificServicesTypeData = cursor.fetchone()
+    specificServiceTypeName = specificServicesTypeData[1]
+    conn.close()
+    return specificServiceTypeName
+
+
+def convertSpecificServiceNameToId(specificServiceTypeName):
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+            SELECT * FROM ServiceTypeGeneral
+            WHERE serviceName = ?
+        ''', (specificServiceTypeName,))
+    specificServicesTypeData = cursor.fetchone()
+    specificServiceTypeId = specificServicesTypeData[0]
+    conn.close()
+    return specificServiceTypeId

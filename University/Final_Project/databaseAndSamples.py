@@ -376,7 +376,9 @@ def createSampleData():  # Zapełnienie bazy danych przykłądowymi danymi
     # Tabela SpecificService ========================================================================================
     specific_services_data = [
         (1, 1, 100.0, 1),  # dentistId, officeId, price, serviceTypeGeneralId
-        (2, 2, 150.0, 2),
+        (2, 1, 150.0, 2),
+        (3, 1, 150.0, 3),
+        (1, 2, 150.0, 2),
         (1, 3, 120.0, 1),
         (1, 4, 100.0, 1),
         (2, 5, 150.0, 2),

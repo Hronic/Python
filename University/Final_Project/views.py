@@ -607,7 +607,7 @@ class MakeReservation(CenteredWindow):
         self.selectedDate = None
         self.discountInserted = None
 
-        WINDOW_SIZE_NORMAL = "450x260"
+        WINDOW_SIZE_NORMAL = "400x290"
         self.GeneralWindowOptions()
         self.geometry(WINDOW_SIZE_NORMAL)
         self.title('Wykonaj rezerwacje')
@@ -625,15 +625,22 @@ class MakeReservation(CenteredWindow):
         self.discountValue = ttk.Entry(self)
         self.discountValue.grid(column=1, row=2, sticky=tk.E, padx=5, pady=5)
 
+        self.labelService = ttk.Label(self, text="Wybierz usługę!")
+        self.labelService.grid(column=0, row=3, columnspan=2, sticky="nsew", padx=5, pady=5)
+        self.selectedService = tk.StringVar()
+        self.cboSelectedService = ttk.Combobox(self, textvariable=self.selectedService)
+        self.cboSelectedService['values'] = tuple(controller.getServicesForOffice(indicatedOffice))
+        self.cboSelectedService.grid(column=0, row=4, columnspan=2, sticky="nsew", padx=5, pady=5)
+
         self.selected_date_label = ttk.Label(self, text="Wybierz datę!")
-        self.selected_date_label.grid(column=0, row=3, columnspan=2, sticky="nsew", padx=5, pady=5)
+        self.selected_date_label.grid(column=0, row=5, columnspan=2, sticky="nsew", padx=5, pady=5)
         self.btnChooseDate = ttk.Button(self, text="Wybierz datę", command=self.choose_date)
-        self.btnChooseDate.grid(column=0, row=4, columnspan=2, sticky="nsew", padx=5, pady=5)
+        self.btnChooseDate.grid(column=0, row=6, columnspan=2, sticky="nsew", padx=5, pady=5)
 
         self.exitApp = ttk.Button(self, text="Zarezerwuj", command=lambda: self.MakeReservationForDate(listOfIds))
-        self.exitApp.grid(column=0, row=7, sticky=tk.W, padx=5, pady=5)
+        self.exitApp.grid(column=0, row=8, sticky=tk.W, padx=5, pady=5)
         self.closeWindow = ttk.Button(self, text="Zamknij Okno", command=self.destroy)
-        self.closeWindow.grid(column=1, row=7, sticky=tk.E, padx=5, pady=5)
+        self.closeWindow.grid(column=1, row=8, sticky=tk.E, padx=5, pady=5)
 
     def choose_date(self):
         date_chooser = DateChooser(self, self.on_date_selected)
@@ -658,8 +665,12 @@ class MakeReservation(CenteredWindow):
         else:
             blnProperDate = controller.isDateNotHoliday(self.selectedDate)
             if blnProperDate:
-                controller.MakeSpecificReservation(officeId, self.selectedDate, self.discountInserted)
-                self.destroy()
+                if self.cboSelectedService.get():
+                    controller.MakeSpecificReservation(officeId, self.selectedDate, self.discountInserted, self.cboSelectedService.get())
+                    self.destroy()
+                else:
+                    print("Nie wybrano usługi!")
+                    self.labelService.config(text="Nie wybrano usługi!")
             else:
                 self.selected_date_label.config(text="Wybrana data jest świętem!")
                 print("Wybrana data jest świętem!")
