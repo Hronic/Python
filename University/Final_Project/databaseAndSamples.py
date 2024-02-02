@@ -256,19 +256,19 @@ def createSampleData():  # Zapełnienie bazy danych przykłądowymi danymi
     ''', dentists_data)
     # Tabela Calendar ========================================================================================
     calendar_data = [
-        (1, 'Nowy Rok', '2024-01-01'),
-        (2, 'Trzech Króli (Objawienie Pańskie)', '2024-01-06'),
-        (3, 'Wielkanoc', '2024-03-31'),
-        (4, 'Poniedziałek Wielkanocny', '2024-04-01'),
-        (5, 'Święto Pracy', '2024-05-01'),
-        (6, 'Święto Konstytucji 3 Maja', '2024-05-03'),
-        (7, 'Zesłanie Ducha Świętego (Zielone Świątki)', '2024-05-19'),
+        (1, 'Nowy Rok', '01-01-2024'),
+        (2, 'Trzech Króli (Objawienie Pańskie)', '06-01-2024'),
+        (3, 'Wielkanoc', '31-03-2024'),
+        (4, 'Poniedziałek Wielkanocny', '01-04-2024'),
+        (5, 'Święto Pracy', '01-05-2024'),
+        (6, 'Święto Konstytucji 3 Maja', '03-05-2024'),
+        (7, 'Zesłanie Ducha Świętego (Zielone Świątki)', '19-05-2024'),
         (8, 'Boże Ciało', '2024-05-30'),
-        (9, 'Święto Wojska Polskiego, Wniebowzięcie Najświętszej Maryi Panny', '2024-08-15'),
-        (10, 'Wszystkich Świętych', '2024-11-01'),
-        (11, 'Święto Niepodległości', '2024-11-11'),
-        (12, 'Boże Narodzenie (pierwszy dzień)', '2024-12-25'),
-        (13, 'Boże Narodzenie (drugi dzień)', '2024-12-26'),
+        (9, 'Święto Wojska Polskiego, Wniebowzięcie Najświętszej Maryi Panny', '15-08-2024'),
+        (10, 'Wszystkich Świętych', '01-11-2024'),
+        (11, 'Święto Niepodległości', '11-11-2024'),
+        (12, 'Boże Narodzenie (pierwszy dzień)', '25-12-2024'),
+        (13, 'Boże Narodzenie (drugi dzień)', '26-12-2024'),
     ]
     cursor.executemany('''
         INSERT INTO Calendar (
@@ -378,6 +378,18 @@ def createSampleData():  # Zapełnienie bazy danych przykłądowymi danymi
         (1, 1, 100.0, 1),  # dentistId, officeId, price, serviceTypeGeneralId
         (2, 2, 150.0, 2),
         (1, 3, 120.0, 1),
+        (1, 4, 100.0, 1),
+        (2, 5, 150.0, 2),
+        (1, 6, 120.0, 1),
+        (1, 7, 100.0, 1),
+        (2, 8, 150.0, 2),
+        (1, 9, 120.0, 1),
+        (1, 10, 100.0, 1),
+        (2, 11, 150.0, 2),
+        (1, 12, 120.0, 1),
+        (1, 13, 100.0, 1),
+        (2, 12, 150.0, 2),
+        (1, 11, 120.0, 1),
         # Dodaj więcej przykładowych danych według potrzeb
     ]
     cursor.executemany('''

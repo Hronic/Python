@@ -1,9 +1,10 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, Text
 import controller
 import sys
 from tkcalendar import Calendar
 from datetime import datetime
+
 
 # Sources:
 # https://www.pythontutorial.net/tkinter/tkinter-grid/
@@ -369,10 +370,14 @@ class MyOpinions(CenteredWindow):
 class MyReservations(CenteredWindow):
     def __init__(self):
         super().__init__()
-        WINDOW_SIZE_NORMAL = "650x300"
+        WINDOW_SIZE_NORMAL = "1000x300"
         self.GeneralWindowOptions()
         self.geometry(WINDOW_SIZE_NORMAL)
         self.title('Moje rezerwacje')
+
+        self.reservationIds = []
+        self.reservationData = []
+        self.selectedReservationId = None
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=5)
@@ -381,21 +386,121 @@ class MyReservations(CenteredWindow):
         self.goBackButton = ttk.Button(self, text="Cofnij", command=lambda: self.CloseOpen("PersonalPanel"))
         self.goBackButton.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
 
+        self.addOpinion = ttk.Button(self, text="Dodaj opinie", command=lambda: self.AddOpinion())
+        self.addOpinion.grid(column=2, row=0, sticky=tk.E, padx=5, pady=5)
+
         self.recordsListbox = tk.Listbox(self, width=50, height=10)
         self.recordsListbox.grid(column=0, row=1, columnspan=3, sticky="nsew", padx=10, pady=10)
+        self.recordsListbox.bind("<<ListboxSelect>>", self.on_listbox_select)
+
+        self.InfoLabel = ttk.Label(self,
+                                   text="Nie wybrano rezerwacji. Proszę zaznaczyć rezerwacje przed dodaniem opinii.")
+        self.InfoLabel.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
 
         reservationData = controller.getUserReservations(controller.USER_LOGGED_ID)
         # Wyświetl opinie w self.records_listbox
         for reservation in reservationData:
             # Pomijaj kolumnę opinionId (0), userId (1) i zamień opinionTypeDicId
-            finalPrice, discountId, comments, reservationDate, status, specificServiceId = reservation[1], reservation[2], reservation[3], reservation[4], reservation[5], reservation[6]
+            reservationId = reservation[0]
+            self.reservationIds.append(reservationId)
+            finalPrice, discountId, comments, reservationDate, status, specificServiceId = reservation[1], reservation[
+                2], reservation[3], reservation[4], reservation[5], reservation[6]
             officeId = controller.getOfficeIdFromSpecificService(specificServiceId)
             list_ids, formattedOffices = controller.getSpecificOfficeInfo(officeId)
             formattedReservation = f"Rezerwacja w cenie  {finalPrice} PLN, dnia: {reservationDate}. Status: {status}, gabinet: {formattedOffices}, komentarze: {comments}"
+            self.reservationData.append(formattedReservation)
             self.recordsListbox.insert(tk.END, formattedReservation)
 
         self.exitAppButton = ttk.Button(self, text="Wyjście", command=lambda: self.CloseWindow())
         self.exitAppButton.grid(column=2, row=2, sticky=tk.E, padx=5, pady=5)
+
+    def on_listbox_select(self, event):
+        selectedLine = self.recordsListbox.curselection()
+        if selectedLine:
+            self.InfoLabel.grid_remove()
+            selectedReservation = self.recordsListbox.get(selectedLine)  # Pobierz zaznaczony gabinet
+            for i, x in enumerate(self.reservationData):
+                if x == selectedReservation:
+                    self.selectedReservationId = self.reservationIds[i]
+                    break
+
+    def AddOpinion(self):
+        if self.selectedReservationId:
+            self.InfoLabel.grid_remove()
+            addOpinionWindow = AddOpinion(self.selectedReservationId)
+            addOpinionWindow.mainloop()
+        else:
+            self.InfoLabel.grid()
+            print("Nie wybrano rezerwacji. Proszę zaznaczyć rezerwacje przed dodaniem opinii.")
+
+
+class AddOpinion(CenteredWindow):
+    def __init__(self, opinionId):
+        super().__init__()
+        WINDOW_SIZE_NORMAL = "660x220"
+        self.GeneralWindowOptions()
+        self.geometry(WINDOW_SIZE_NORMAL)
+        self.title('Dodaj opinie')
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
+        self.columnconfigure(3, weight=1)
+
+        self.opinionStars = 0
+        self.opinionType = None
+
+
+        self.InfoLabelChoice = ttk.Label(self, text="Co oceniasz?")
+        self.InfoLabelChoice.grid(column=0, row=0, sticky=tk.E, padx=5, pady=5)
+
+        self.opinionTypeSelected = tk.StringVar()
+        self.cboSelectedOpinionType = ttk.Combobox(self, textvariable=self.opinionTypeSelected)
+        self.cboSelectedOpinionType.grid(column=1, row=0, sticky=tk.W, padx=5, pady=5)
+        self.cboSelectedOpinionType['values'] = tuple(controller.GetOpinionTypes())
+        self.cboSelectedOpinionType.bind('<<ComboboxSelected>>', self.onOpinionTypeSelected)
+
+        self.InfoLabelStars = ttk.Label(self, text="Wybierz ocenę")
+        self.InfoLabelStars.grid(column=2, row=0, sticky=tk.E, padx=5, pady=5)
+
+        self.opinionStarsSelected = tk.IntVar()
+        self.cboSelectedStars = ttk.Combobox(self, textvariable=self.opinionStarsSelected)
+        self.cboSelectedStars.grid(column=3, row=0, sticky=tk.W, padx=5, pady=5)
+        availableValues = [1, 2, 3, 4, 5]
+        self.cboSelectedStars['values'] = tuple(availableValues)
+        self.cboSelectedStars.bind('<<ComboboxSelected>>', self.onStarsSelected)
+
+        self.text = Text(self, height=8)
+        self.text.grid(column=0, row=1, columnspan=4, sticky="nsew", padx=10, pady=10)
+        self.text.insert('1.0', 'Wprowadź opinie')
+
+        self.labelError = ttk.Label(self, text="Co oceniasz?")
+        self.labelError.grid(column=0, row=4, sticky=tk.E, padx=5, pady=5)
+        self.labelError.grid_remove()
+
+        self.SaveOpinion = ttk.Button(self, text="Dodaj opinie", command=lambda: self.SaveOpinionInDatabase())
+        self.SaveOpinion.grid_remove()
+
+        self.closeWindow = ttk.Button(self, text="Zamknij okno", command=lambda: self.destroy())
+        self.closeWindow.grid(column=3, row=5, sticky=tk.E, padx=5, pady=5)
+
+    def SaveOpinionInDatabase(self):
+        textContent = self.text.get('1.0', 'end')
+        controller.saveOpinionToDatabase(textContent, self.opinionType, self.opinionStars)
+
+    def onOpinionTypeSelected(self, event):
+        self.opinionType = self.opinionTypeSelected.get()
+        self.VerifyComboBoxes()
+
+    def onStarsSelected(self, event):
+        self.opinionStars = self.opinionStarsSelected.get()
+        self.VerifyComboBoxes()
+
+    def VerifyComboBoxes(self):
+        if self.opinionStars != 0 and self.opinionType:
+            self.SaveOpinion.grid(column=0, row=5, sticky=tk.W, padx=5, pady=5)
+        else:
+            self.SaveOpinion.grid_remove()
+
 
 class FindRecords(CenteredWindow):
     def __init__(self, country, city):
@@ -405,7 +510,7 @@ class FindRecords(CenteredWindow):
         WINDOW_SIZE_NORMAL = "800x290"
         self.GeneralWindowOptions()
         self.geometry(WINDOW_SIZE_NORMAL)
-        self.title('Panel użytkownika')
+        self.title('Wyniki wyszukiwania')
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -415,8 +520,19 @@ class FindRecords(CenteredWindow):
 
         self.goBackButton = ttk.Button(self, text="Cofnij", command=lambda: self.CloseOpen("MainPage"))
         self.goBackButton.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
+
         self.reserveOffice = ttk.Button(self, text="Zarezerwuj", command=lambda: self.MakeReservation())
         self.reserveOffice.grid(column=4, row=0, sticky=tk.W, padx=5, pady=5)
+        self.notLoggedInLabel = ttk.Label(self, text="Musisz się zalogować, aby móc rezerwować!")
+        self.notLoggedInLabel.grid(column=4, row=0, sticky=tk.W, padx=5, pady=5)
+
+        if controller.USER_LOGGED_IN:  # Zależnie od statusu zalogowania pokaż/ukryj przycisk
+            self.reserveOffice.grid()
+            self.notLoggedInLabel.grid_remove()
+        else:
+            self.reserveOffice.grid_remove()
+            self.notLoggedInLabel.grid()
+
         self.lookOpinions = ttk.Button(self, text="Zobacz opinie", command=lambda: self.OpenOpinionsWindow())
         self.lookOpinions.grid(column=2, row=7, sticky=tk.W, padx=5, pady=5)
         self.exitApp = ttk.Button(self, text="Wyjście", command=lambda: self.CloseWindow())
@@ -524,12 +640,29 @@ class MakeReservation(CenteredWindow):
     def on_date_selected(self, selected_date):
         parsed_date = datetime.strptime(selected_date, "%m/%d/%y")
         formatted_date = parsed_date.strftime("%d-%m-%Y")
-        self.selected_date_label.config(text=f"Wybrana data: {formatted_date}")
-        self.selectedDate = formatted_date
+        parsed_date = datetime.strptime(formatted_date, "%d-%m-%Y")
+        current_date = datetime.now()
+        if parsed_date < current_date:
+            self.selected_date_label.config(text="Data nie może być wsteczna!")
+            self.selectedDate = None
+        else:
+            self.selected_date_label.config(text=f"Wybrana data: {formatted_date}")
+            self.selectedDate = formatted_date
 
     def MakeReservationForDate(self, officeId):
         self.discountInserted = self.discountValue.get()
-        controller.MakeSpecificReservation(officeId, self.selectedDate, self.discountInserted)
+        if self.selectedDate is None:
+            self.selected_date_label.config(text="Nie wybrano daty rezerwacji!")
+            print("Nie wybrano daty rezerwacji!")
+        else:
+            blnProperDate = controller.isDateNotHoliday(self.selectedDate)
+            if blnProperDate:
+                controller.MakeSpecificReservation(officeId, self.selectedDate, self.discountInserted)
+                self.destroy()
+            else:
+                self.selected_date_label.config(text="Wybrana data jest świętem!")
+                print("Wybrana data jest świętem!")
+
 
 class DateChooser(tk.Toplevel):
     def __init__(self, parent, callback):
@@ -537,7 +670,8 @@ class DateChooser(tk.Toplevel):
         self.title("Wybierz datę")
         self.geometry("300x300")
         current_date = datetime.now().date()
-        self.cal = Calendar(self, selectmode="day", year=current_date.year, month=current_date.month, day=current_date.day)
+        self.cal = Calendar(self, selectmode="day", year=current_date.year, month=current_date.month,
+                            day=current_date.day)
         self.cal.pack(pady=20)
 
         btn_ok = ttk.Button(self, text="OK", command=lambda: self.on_ok(callback))

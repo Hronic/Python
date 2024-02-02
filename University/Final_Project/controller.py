@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 DATABASE_NAME = "PorownywarkaStomatologiczna.db"
 USER_LOGGED_IN = False
@@ -13,6 +14,16 @@ def GetCountriesFromTable():
     countriesNames = [country[0] for country in allCountries]
     conn.close()
     return countriesNames
+
+
+def GetOpinionTypes():
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('SELECT opinionTypeName FROM OpinionTypeDic')
+    allOpinionTypes = cursor.fetchall()
+    opinionNames = [opinionType[0] for opinionType in allOpinionTypes]
+    conn.close()
+    return opinionNames
 
 
 def GetCitiesForCountry(strCountryName):
@@ -156,6 +167,19 @@ def getUserOpinions(userId):
     conn.close()
     return opinionsData
 
+
+def saveOpinionToDatabase(opinionText, opinionTypeDicId, stars):
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    global USER_LOGGED_ID
+    currentDate = datetime.now().date()
+    cursor.execute('''
+        INSERT INTO Opinion (userId, opinionTypeDicId, reviewedEntryId, creationDate, opinionValue, stars)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (USER_LOGGED_ID, opinionTypeDicId, 1, currentDate, opinionText, stars))
+    conn.close()
+
+
 def getUserReservations(userId):
     # Metoda zwraca rezerwacje dla użytkownika o podanym userId
     conn = sqlite3.connect(DATABASE_NAME)
@@ -168,6 +192,7 @@ def getUserReservations(userId):
     conn.close()
     return reservationData
 
+
 def getOfficeIdFromSpecificService(specificServiceId):
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
@@ -179,8 +204,10 @@ def getOfficeIdFromSpecificService(specificServiceId):
     officeId = specificServiceData[0][2]
     conn.close()
     return officeId
+
+
 def getOfficesData(country, city):
-    #Pobierz gabinety dla danego kraju i miasta
+    # Pobierz gabinety dla danego kraju i miasta
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     cursor.execute('''
@@ -198,8 +225,9 @@ def getOfficesData(country, city):
     conn.close()
     return list_ids, formattedOffices
 
+
 def getSpecificOfficeInfo(officeId):
-    #Pobierz informacje o konkretnym gabinecie na podstawie officeId
+    # Pobierz informacje o konkretnym gabinecie na podstawie officeId
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     cursor.execute('''
@@ -209,14 +237,17 @@ def getSpecificOfficeInfo(officeId):
         JOIN CountryDic co ON o.countryDicId = co.countryDicId
         WHERE o.isActive = 1 AND o.officeId = ? 
     ''', (officeId,))
-    officesData = [(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]) for row in cursor.fetchall()]
-    list_ids = [row[0] for row in officesData]  #get Ids
+    officesData = [(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]) for row in
+                   cursor.fetchall()]
+    list_ids = [row[0] for row in officesData]  # get Ids
     formattedOffices = [
         f"Gabinet: {officeName}, \nadres: {countryName} {cityName} {address} {postCode}, \nadres www: {webPageAddress}, \n{'Obsługuje NFZ' if isNFZAvailable else 'Nie obsługuje NFZ'}"
-        for officeId, cityName, countryName, address, isNFZAvailable, officeName, address, postCode, webPageAddress in officesData
+        for officeId, cityName, countryName, address, isNFZAvailable, officeName, address, postCode, webPageAddress in
+        officesData
     ]
     conn.close()
     return list_ids, formattedOffices
+
 
 def get_office_opinions(officeIdd):
     # Pobierz opinie dla danego gabinetu
@@ -234,6 +265,7 @@ def get_office_opinions(officeIdd):
     ]
     conn.close()
     return formattedData
+
 
 def MakeSpecificReservation(officeId, date, discountCode):
     officeIdReservation = officeId[0]
@@ -259,13 +291,12 @@ def MakeSpecificReservation(officeId, date, discountCode):
         discountId = 1
         print(f"Brak kodu rabatowego o kodzie: {discountCode}")
 
-
     cursor.execute('''
         SELECT * FROM SpecificService
         WHERE officeId = ?
     ''', (officeIdReservation,))
     opinionsData = cursor.fetchall()
-    #specificServiceId, dentistId, officeId, price, serviceTypeGeneralId
+    # specificServiceId, dentistId, officeId, price, serviceTypeGeneralId
     specificService = [(row[0], row[1], row[2], row[3], row[4]) for row in opinionsData]
     specificServiceId = specificService[0][0]
     finalPrice = specificService[0][3]
@@ -273,7 +304,7 @@ def MakeSpecificReservation(officeId, date, discountCode):
         if isValue == 1:
             finalPrice = finalPrice - discountValue
         else:
-            finalPrice = (1-discountValue) * finalPrice
+            finalPrice = (1 - discountValue) * finalPrice
     else:
         finalPrice = specificService[0][3]
 
@@ -284,3 +315,18 @@ def MakeSpecificReservation(officeId, date, discountCode):
     conn.commit()
     conn.close()
 
+
+def isDateNotHoliday(dateToBeValidated):
+    blnDateCorrectness = True
+    conn = sqlite3.connect(DATABASE_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM Calendar
+    ''')
+    dates = [(row[0], row[1], row[2]) for row in cursor.fetchall()]
+    conn.close()
+    for singleDate in dates:
+        if singleDate[2] == dateToBeValidated:
+            blnDateCorrectness = False
+            break
+    return blnDateCorrectness
